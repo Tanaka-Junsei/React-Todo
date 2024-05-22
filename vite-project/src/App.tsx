@@ -35,46 +35,17 @@ export const App = () => {
     setText(e.target.value);
   };
 
-  const handleEdit = (id: number, value: string) => {
-    setTodos((todos) => {
-      /**
-       * 引数として渡された todo の id が一致する
-       * 更新前の todos ステート内の todo の
-       * value プロパティを引数 value (= e.target.value) に書き換える
-       */
-      const newTodos = todos.map((todo) => {
-        if (todo.id === id) {
-          return {...todo, value: value};
-        }
-        return todo;
-      });
-      // todos ステートを更新
-      return newTodos;
-    });
-  };
-
-  const handleCheck = (id: number, checked: boolean) => {
-    setTodos((todos) => {
-      /**
-       * 引数として渡された todo の id が一致する
-       * 更新前の todos ステート内の todo の
-       * value プロパティを引数 value (= e.target.value) に書き換える
-       */
-      const newTodos = todos.map((todo) => {
-        if (todo.id === id) {
-          return {...todo, checked: checked};
-        }
-        return todo;
-      });
-      return newTodos;
-    });
-  };
-
-  const handleRemove = (id: number, removed: boolean) => {
+  const handleTodo = <K extends keyof Todo, V extends Todo[K]>( 
+    // K extends keyof Todoは 'id', 'value', 'checked', 'removed'のいずれか
+    // V extends Todo[K]はtodo.id, todo.value, todo.checked, todo.removedのいずれか
+    id: number,
+    key: K,
+    value: V
+  ) => {
     setTodos((todos) => {
       const newTodos = todos.map((todo) => {
         if (todo.id === id) {
-          return {...todo, removed: removed};
+          return {...todo, [key]: value};
         }
         return todo;
       });
@@ -159,15 +130,15 @@ export const App = () => {
             type='checkbox'
             disabled={filter === 'checked' || filter === 'removed'}
             checked={todo.checked}
-            onChange={() => handleCheck(todo.id, !todo.checked)} // ここでeを持ってこないのは、eは入力文字列の情報を持ってるから関係ない
+            onChange={() => handleTodo(todo.id, 'checked', !todo.checked)} // ここでeを持ってこないのは、eは入力文字列の情報を持ってるから関係ない
             />
             <input 
               type="text"
               disabled={filter === 'checked' || filter === 'removed'}
               value={todo.value}
-              onChange={(e) => handleEdit(todo.id, e.target.value)}
+              onChange={(e) => handleTodo(todo.id, 'value', e.target.value)}
             />
-            <button onClick={() => handleRemove(todo.id, !todo.removed)}>{todo.removed ? '復元' : '削除'}</button>
+            <button onClick={() => handleTodo(todo.id, 'removed', !todo.removed)}>{todo.removed ? '復元' : '削除'}</button>
             </li>
           );
         })}
