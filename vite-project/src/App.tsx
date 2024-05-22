@@ -1,13 +1,8 @@
 import { useState } from "react";
-
-type Todo = {
-  value : string;
-  readonly id: number;
-  checked : boolean;
-  removed : boolean;
-};
-
-type Filter = 'all' | 'checked' | 'unchecked' | 'removed';
+import { FormDialog } from "./FormDialog"; // 外部ファイルに記述されたコンポーネントをインポート
+import { ActionButton } from "./ActionButton";
+import { SideBar } from "./SideBar";
+import { TodoItem } from "./TodoItem";
 
 export const App = () => {
 
@@ -61,88 +56,26 @@ export const App = () => {
     setTodos((todos) => todos.filter((todo) => !todo.removed)); // filterはtrueの要素だけを残すから、removedがfalseだけ持ってきてる
   }
 
-  const filteredTodos = todos.filter((todo) => { // これは配列に対するfilterメソッドを使ってる
-    // filter ステートの値に応じて異なる内容の配列を返す
-    switch (filter) {
-      case 'all':
-        // 削除されていないもの
-        return !todo.removed;
-      case 'checked':
-        // 完了済 **かつ** 削除されていないもの
-        return todo.checked && !todo.removed;
-      case 'unchecked':
-        // 未完了 **かつ** 削除されていないもの
-        return !todo.checked && !todo.removed;
-      case 'removed':
-        // 削除済みのもの
-        return todo.removed;
-      default:
-        return todo;
-    }
-  });
-
   return (
     <div>
       {/* ⇩セレクターが表示されるタグ */}
-      <select 
-      defaultValue='all'
-      onChange={(e) => handleSort(e.target.value as Filter)}
-      > 
-        <option value="all">全てのタスク</option>
-        <option value="checked">完了したタスク</option>
-        <option value="unchecked">現在のタスク</option>
-        <option value="removed">ゴミ箱</option>
-      </select>
-      {filter === 'removed' ? (
-        <button 
-        onClick={handleEmpty}
-        disabled={todos.filter((todo) => todo.removed).length === 0} // removedになっているtodoのインスタンスの要素数が0なら見せない
-        >
-          ゴミ箱を空にする
-        </button>
-      ) : (
-        filter !== 'checked' && (
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit()
-          }}>
-            <input  // inputタグにはいろんな種類がある、それをtypeで指定してる
-              type='text'
-              // textステートが持ってる入力中のテキストの値をvalueとして表示
-              value={text} // JSXの中でJSの変数の値を展開するときは{}で囲う必要がある. valueはinputタグの初期値を入れる
-              // onChange イベント(入力テキストの変化)をtextステートに反映
-              // disabled={filter === 'checked' || filter === 'removed'}
-              onChange={(e) => handleChange(e)} />
-            <input
-              type="submit"
-              value="追加"
-              // disabled={filter === 'checked' || filter === 'removed'}
-              onSubmit={handleSubmit}
-            />
-          </form>
-        )
-      )}
-      <ul>
-        {filteredTodos.map((todo) => {
-          return (
-          <li key={todo.id}>
-            <input
-            type='checkbox'
-            disabled={filter === 'checked' || filter === 'removed'}
-            checked={todo.checked}
-            onChange={() => handleTodo(todo.id, 'checked', !todo.checked)} // ここでeを持ってこないのは、eは入力文字列の情報を持ってるから関係ない
-            />
-            <input 
-              type="text"
-              disabled={filter === 'checked' || filter === 'removed'}
-              value={todo.value}
-              onChange={(e) => handleTodo(todo.id, 'value', e.target.value)}
-            />
-            <button onClick={() => handleTodo(todo.id, 'removed', !todo.removed)}>{todo.removed ? '復元' : '削除'}</button>
-            </li>
-          );
-        })}
-      </ul>
+      <SideBar
+        onSort={handleSort}
+      />
+      <FormDialog
+        text={text}
+        onSubmit={handleSubmit}
+        onChange={handleChange}
+      />
+      <TodoItem
+        todos={todos}
+        filter={filter}
+        onTodo={handleTodo}
+      />
+      <ActionButton
+        todos={todos}
+        onEmpty={handleEmpty}
+      />
     </div>
   );
 };
