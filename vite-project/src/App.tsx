@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormDialog } from "./FormDialog"; // 外部ファイルに記述されたコンポーネントをインポート
 import { ActionButton } from "./ActionButton";
 import { SideBar } from "./SideBar";
@@ -9,6 +9,7 @@ import { GlobalStyles } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material";
 import { indigo, pink } from "@mui/material/colors";
 import { AlertDialog } from "./AlertDialog";
+import localforage from 'localforage';
 
 const theme = createTheme({ // App内に置いちゃうと、Appがビルドされるたびにこれも計算されちゃう
   palette: {
@@ -26,6 +27,16 @@ const theme = createTheme({ // App内に置いちゃうと、Appがビルドさ�
 });
 
 export const App = () => {
+
+  useEffect(() => {
+    localforage
+      .getItem('todo-20200101')
+      .then((values) => setTodos(values as Todo[]));
+  }, []);
+
+  useEffect(() => {
+    localforage.setItem('todo-20200101', todos);
+  }, [todos]);
 
   const [text, setText] = useState(''); // set+ステートにするのが通例, setTextがFlutterでいうところのProviderの中身の処理に近い
 
