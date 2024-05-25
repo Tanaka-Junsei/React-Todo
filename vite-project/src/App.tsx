@@ -3,6 +3,27 @@ import { FormDialog } from "./FormDialog"; // 外部ファイルに記述され�
 import { ActionButton } from "./ActionButton";
 import { SideBar } from "./SideBar";
 import { TodoItem } from "./TodoItem";
+import { ToolBar } from "./ToolBar";
+import { QR } from "./QR";
+import { GlobalStyles } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material";
+import { indigo, pink } from "@mui/material/colors";
+import { AlertDialog } from "./AlertDialog";
+
+const theme = createTheme({ // App内に置いちゃうと、Appがビルドされるたびにこれも計算されちゃう
+  palette: {
+    primary: {
+      main: indigo[500],
+      light: '#757de8',
+      dark: '#002984',
+    },
+    secondary: {
+      main: pink[500],
+      light: '#ff6090',
+      dark: '#b0003a',
+    },
+  },
+});
 
 export const App = () => {
 
@@ -13,9 +34,37 @@ export const App = () => {
 
   const [filter, setFilter] = useState<Filter>('all');
 
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const [qrOpen, setQrOpen] = useState(false);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const [alertOpen, setAlertOpen] = useState(false);
+
+  const handleToggleAlert = () => {
+    setAlertOpen((alertOpen) => !alertOpen);
+  };
+
+  const handleToggleDialog = () => {
+    setDialogOpen((dialogOpen) => !dialogOpen);
+    setText(''); // フォームをクリアにする
+  };
+
+  const handleToggleQR = () => {
+    setQrOpen((qrOpen) => !qrOpen);
+  };
+
+  const handleToggleDrawer = () => {
+    setDrawerOpen((drawerOpen) => !drawerOpen);
+  };
+
   const handleSubmit = () => {
     // 何も入力されてなかったらそのまま返す
-    if (!text) return;
+    if (!text) {
+      setDialogOpen((dialogOpen) => !dialogOpen);
+      return;
+    }
     const newTodo: Todo = {
       value: text,
       id: new Date().getTime(),
@@ -24,9 +73,10 @@ export const App = () => {
     }
     setTodos((todos) => [newTodo, ...todos]); // ...todosはtodos配列の全ての要素を列挙している
     setText('');
+    setDialogOpen((dialogOpen) => !todos); // ここよくわからん
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setText(e.target.value);
   };
 
@@ -57,15 +107,32 @@ export const App = () => {
   }
 
   return (
-    <div>
+    <ThemeProvider theme={theme}>
+      <GlobalStyles styles={{ body: { margin: 0, padding: 0}}} />
+      {/* ↑これをつけると、ドキュメント全体のスタイルをいじれる */}
+      <ToolBar 
+      filter={filter} 
+      onToggleDrawer={handleToggleDrawer}
+      />
       {/* ⇩セレクターが表示されるタグ */}
       <SideBar
         onSort={handleSort}
+        onToggleDrawer={handleToggleDrawer}
+        drawerOpen={drawerOpen}
+        onToggleQR={handleToggleQR}
       />
+      <QR open={qrOpen} onClose={handleToggleQR}/>
       <FormDialog
         text={text}
         onSubmit={handleSubmit}
         onChange={handleChange}
+        dialogOpen={dialogOpen}
+        onToggleDialog={handleToggleDialog}
+      />
+      <AlertDialog
+      alertOpen={alertOpen}
+      onEmpty={handleEmpty}
+      onToggleAlert={handleToggleAlert}
       />
       <TodoItem
         todos={todos}
@@ -74,8 +141,12 @@ export const App = () => {
       />
       <ActionButton
         todos={todos}
-        onEmpty={handleEmpty}
+        filter={filter}
+        alertOpen={alertOpen}
+        dialogOpen={dialogOpen}
+        onToggleAlert={handleToggleAlert}
+        onToggleDialog={handleToggleDialog}
       />
-    </div>
+    </ThemeProvider>
   );
 };
